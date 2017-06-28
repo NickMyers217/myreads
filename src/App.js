@@ -1,6 +1,6 @@
-import React from 'react'
-import * as BooksAPI from './BooksAPI'
-import './App.css'
+import React from 'react';
+import * as BooksAPI from './BooksAPI';
+import './App.css';
 
 class BooksApp extends React.Component {
   state = {
@@ -190,8 +190,8 @@ class BooksApp extends React.Component {
           </div>
         )}
       </div>
-    )
+    );
   }
-}
+};
 
-export default BooksApp
+export default BooksApp;
