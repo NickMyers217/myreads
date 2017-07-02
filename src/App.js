@@ -31,7 +31,7 @@ class BooksApp extends React.Component {
   }
 
   componentWillMount() {
-    const { statuses } = this.state;
+    const { statuses } = this.props;
 
     this.setState(prevState => ({
       ...prevState,
