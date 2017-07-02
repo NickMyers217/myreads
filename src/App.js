@@ -1,9 +1,9 @@
 import React from 'react';
-import * as BooksAPI from './BooksAPI';
-import './App.css';
 import { BrowserRouter, Route, Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
+import * as BooksAPI from './BooksAPI';
+import './App.css';
 import SearchPage from './SearchPage';
 import BookShelf from './BookShelf';
 
@@ -16,48 +16,42 @@ class BooksApp extends React.Component {
 
   constructor(props) {
     super(props);
+    this.addNewBookFromSearchResults = this.addNewBookFromSearchResults.bind(this);
+    this.bookIsNotInLibrary = this.bookIsNotInLibrary.bind(this);
     this.changeBookStatus = this.changeBookStatus.bind(this);
     this.updateSearchPhrase = this.updateSearchPhrase.bind(this);
   }
 
+  // Override
   componentWillMount() {
     this.setState(prevState => ({ ...prevState, statuses: this.props.statuses }));
-    // TODO: Use localstorage to retrieve books that may be in there
+    // TODO: Use localstorage to retrieve state if it exists
   }
 
-  searchForBooks() {
-    const defaultStatus = Object.keys(this.state.statuses)
-      .map(k => this.state.statuses[k])
-      .filter(status => status.default)
-      .shift();
+  addNewBookFromSearchResults(bookId) {
+    return newStatusValue => {
+      const { searchResults } = this.state;
+      const book = this.getBookById(bookId, searchResults);
+      const newStatus = this.getStatusByValue(newStatusValue);
 
-
-    // TODO: Put these books on the search page instead
-    BooksAPI.search(this.state.searchPhrase)
-      .then(books =>
-        books.map(book => ({
-          ...book,
-          status: defaultStatus
-        })))
-      .then(books =>
+      if (book && newStatusValue !== 'none' && this.bookIsNotInLibrary(bookId)) {
         this.setState(prevState => ({
           ...prevState,
-          books
-        })));
+          searchResults: prevState.searchResults.filter(b => b.id !== bookId),
+          books: prevState.books.concat([{ ...book, status: newStatus }])
+        }));
+      }
+    };
   }
 
-  // TODO: Adding books and moving them into localStorage
-
-  updateSearchPhrase(e) {
-    e.persist();
-    this.setState(prevState => ({
-      ...prevState,
-      searchPhrase: e.target.value
-    }), this.searchForBooks);
+  bookIsInLibrary(bookId) {
+    return this.state.books
+      .filter(book => book.id === bookId)
+      .length > 0;
   }
 
-  getBooksInStatus(status) {
-    return this.state.books.filter(b => b.status === status);
+  bookIsNotInLibrary(bookId) {
+    return !this.bookIsInLibrary(bookId);
   }
 
   changeBookStatus(bookId) {
@@ -67,15 +61,10 @@ class BooksApp extends React.Component {
       if (newStatusValue === 'none') {
         books = this.state.books.filter(b => b.id !== bookId);
       } else {
-        const newStatus = Object.keys(this.state.statuses)
-          .map(k => this.state.statuses[k])
-          .filter(status => status.value === newStatusValue)
-          .shift();
-
         books = this.state.books
           .map(book => (
             book.id === bookId
-              ? { ...book, status: newStatus }
+              ? { ...book, status: this.getStatusByValue(newStatusValue) }
               : book
           ));
       }
@@ -84,15 +73,65 @@ class BooksApp extends React.Component {
     };
   }
 
+  getBookById(bookId, list) {
+    return list
+      .filter(book => book.id === bookId)
+      .shift();
+  }
+
+  getBooksInStatus(status) {
+    return this.state.books.filter(b => b.status === status);
+  }
+
+  getStatusByValue(value) {
+    return Object.keys(this.state.statuses)
+      .map(k => this.state.statuses[k])
+      .filter(status => status.value === value)
+      .shift();
+  }
+
+  searchForBooks() {
+    const { searchPhrase } = this.state;
+    const filterSearchResultsForBooksAlreadyAdded = searchResults => 
+      searchResults.filter(book => this.bookIsNotInLibrary(book.id));
+    const addDefaultStatusToResults = searchResults =>
+      searchResults.map(book => ({
+        ...book,
+        status: { display: 'none', value: 'none' }
+      }));
+    const updateState = searchResults =>
+      this.setState(prevState => ({
+        ...prevState,
+        searchResults
+      }))
+
+    BooksAPI.search(searchPhrase)
+      .then(filterSearchResultsForBooksAlreadyAdded)
+      .then(addDefaultStatusToResults)
+      .then(updateState);
+  }
+
+  updateSearchPhrase(e) {
+    e.persist();
+    this.setState(prevState => ({
+      ...prevState,
+      searchPhrase: e.target.value
+    }), this.searchForBooks);
+  }
+
+  // Override
   render() {
-    const { statuses, searchPhrase } = this.state;
+    const { statuses, searchPhrase, searchResults } = this.state;
     return (
       <BrowserRouter>
         <div className="app">
           <Route exact path='/search' render={() =>
             <SearchPage
               searchPhrase={searchPhrase}
-              onKeyUp={this.updateSearchPhrase} />
+              searchResults={searchResults}
+              statuses={statuses}
+              onKeyUp={this.updateSearchPhrase}
+              onBookStatuschange={this.addNewBookFromSearchResults} />
           } />
           <Route exact path='/' render={() =>
             <div className="list-books">
