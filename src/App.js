@@ -5,12 +5,16 @@ import { BrowserRouter, Route, Link } from 'react-router-dom';
 
 // TODO: Add proptypes too all of these components
 
-const SearchPage = ({ onBackBtnClick }) => (
+const SearchPage = ({ searchPhrase, onKeyUp }) => (
   <div className="search-books">
     <div className="search-books-bar">
       <Link to="/" className="close-search" />
       <div className="search-books-input-wrapper">
-        <input type="text" placeholder="Search by title or author" />
+        <input
+          type="text"
+          placeholder="Search by title or author"
+          value={searchPhrase}
+          onChange={onKeyUp} />
       </div>
     </div>
     <div className="search-books-results">
@@ -35,7 +39,7 @@ const StatusSelect = ({ statuses, value, onStatusChange }) => (
 );
 
 const Book = ({ book, statuses, onStatusChange }) => {
-  const { imageLinks, title = '', authors = [], width, height } = book;
+  const { imageLinks={thumbnail: ''}, title = '', authors = [], width, height } = book;
   return (
     <div className="book">
       <div className="book-top">
@@ -63,7 +67,10 @@ const BookShelf = ({ title, books, statuses, onBookStatuschange }) => (
       <ol className="books-grid">
         {books.map(book =>
           <li key={book.id}>
-            <Book book={book} statuses={statuses} onStatusChange={onBookStatuschange} />
+            <Book
+              book={book}
+              statuses={statuses}
+              onStatusChange={onBookStatuschange} />
           </li>)}
       </ol>
     </div>
@@ -71,14 +78,21 @@ const BookShelf = ({ title, books, statuses, onBookStatuschange }) => (
 );
 
 class BooksApp extends React.Component {
+  state = {
+    searchPhrase: '',
+    searchResults: [],
+    books: []
+  };
+
   constructor(props) {
     super(props);
     this.changeBookStatus = this.changeBookStatus.bind(this);
-    this.state = {
-      searchPhrase: 'Baseball',
-      statuses: props.statuses,
-      books: []
-    };
+    this.updateSearchPhrase = this.updateSearchPhrase.bind(this);
+  }
+
+  componentWillMount() {
+    this.setState(prevState => ({ ...prevState, statuses: this.props.statuses }));
+    // TODO: Use localstorage to retrieve books that may be in there
   }
 
   searchForBooks() {
@@ -87,7 +101,9 @@ class BooksApp extends React.Component {
       .filter(status => status.default)
       .shift();
 
-    BooksAPI.search(this.state.searchPhrase, 5)
+
+    // TODO: Put these books on the search page instead
+    BooksAPI.search(this.state.searchPhrase)
       .then(books =>
         books.map(book => ({
           ...book,
@@ -96,8 +112,18 @@ class BooksApp extends React.Component {
       .then(books =>
         this.setState(prevState => ({
           ...prevState,
-          books: prevState.books.concat(books)
+          books
         })));
+  }
+
+  // TODO: Adding books and moving them into localStorage
+
+  updateSearchPhrase(e) {
+    e.persist();
+    this.setState(prevState => ({
+      ...prevState,
+      searchPhrase: e.target.value
+    }), this.searchForBooks);
   }
 
   getBooksInStatus(status) {
@@ -128,16 +154,16 @@ class BooksApp extends React.Component {
     };
   }
 
-  componentDidMount() {
-    this.searchForBooks();
-  }
-
   render() {
-    const { statuses } = this.state;
+    const { statuses, searchPhrase } = this.state;
     return (
       <BrowserRouter>
         <div className="app">
-          <Route exact path='/search' component={SearchPage} />
+          <Route exact path='/search' render={() =>
+            <SearchPage
+              searchPhrase={searchPhrase}
+              onKeyUp={this.updateSearchPhrase} />
+          } />
           <Route exact path='/' render={() =>
             <div className="list-books">
               <div className="list-books-title">
