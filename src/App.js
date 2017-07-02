@@ -65,23 +65,14 @@ class BooksApp extends React.Component {
 
   changeBookStatus(bookId) {
     return newStatusValue => {
-      let books = [];
+      const book = this.getBookById(bookId, this.state.books);
+      const newBook = this.defaultBookStatus({ ...book, shelf: newStatusValue });
+      const books = this.state.books
+        .map(book => book.id === bookId ? newBook : book);
 
-      if (newStatusValue === 'none') {
-        books = this.state.books.filter(b => b.id !== bookId);
-      } else {
-        books = this.state.books
-          .map(book => (
-            book.id === bookId
-              ? { ...book, status: this.getStatusByValue(newStatusValue) }
-              : book
-          ));
-      }
-
-      this.setState(prevState => ({
-        ...prevState,
-        books
-      }), () => this.updateBookOnServer(this.getBookById(bookId, this.state.books)));
+      
+      this.updateBookOnServer(newBook)
+        .then(this.setState(prevState => ({ ...prevState, books })));
     };
   }
 
@@ -139,7 +130,7 @@ class BooksApp extends React.Component {
     const newShelf = book.status && book.status.value
       ? book.status.value
       : 'none';
-    BooksAPI.update(book, newShelf);
+    return BooksAPI.update(book, newShelf);
   }
 
   updateSearchPhrase(e) {
