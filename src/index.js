@@ -3,4 +3,10 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+const statuses = {
+    CURRENTLY_READING: { display: 'Currently Reading', value: 'currentlyReading' },
+    WANT_TO_READ: { display: 'Want to Read', value: 'wantToRead' },
+    READ: { display: 'Read', value: 'read' }
+};
+
+ReactDOM.render(<App statuses={statuses} />, document.getElementById('root'));

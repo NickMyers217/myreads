@@ -1,16 +1,16 @@
 import React from 'react';
 import * as BooksAPI from './BooksAPI';
 import './App.css';
-import {BrowserRouter, Route, Link} from 'react-router-dom';
+import { BrowserRouter, Route, Link } from 'react-router-dom';
 
 // TODO: Add proptypes too all of these components
 
-const SearchPage = ({onBackBtnClick}) => (
+const SearchPage = ({ onBackBtnClick }) => (
   <div className="search-books">
     <div className="search-books-bar">
       <Link to="/" className="close-search" />
       <div className="search-books-input-wrapper">
-        <input type="text" placeholder="Search by title or author"/>
+        <input type="text" placeholder="Search by title or author" />
       </div>
     </div>
     <div className="search-books-results">
@@ -19,59 +19,78 @@ const SearchPage = ({onBackBtnClick}) => (
   </div>
 );
 
-const Book = ({imageLinks, title='', authors=[], width, height}) => (
-  <div className="book">
-    <div className="book-top">
-      <div className="book-cover"
-        style={{
-          width: width ? width : 128,
-          height: height ? height : 193,
-          backgroundImage: `url("${imageLinks.thumbnail}")`
-        }}>
-      </div>
-      <div className="book-shelf-changer">
-        <select>
-          <option value="none" disabled>Move to...</option>
-          <option value="currentlyReading">Currently Reading</option>
-          <option value="wantToRead">Want to Read</option>
-          <option value="read">Read</option>
-          <option value="none">None</option>
-        </select>
-      </div>
-    </div>
-    <div className="book-title">{title}</div>
-    <div className="book-authors">{authors.join(', ')}</div>
+const StatusSelect = ({ statuses }) => (
+  <div className="book-shelf-changer">
+    <select>
+      <option value="none" disabled>Move to...</option>
+      {Object.keys(statuses).map(k =>
+        <option key={k} value={statuses[k].value}>
+          {statuses[k].display}
+        </option>)}
+      <option value="none">None</option>
+    </select>
   </div>
 );
 
-const BookShelf = ({title, books}) => (
+const Book = ({ book, statuses }) => {
+  const { imageLinks, title = '', authors = [], width, height } = book;
+  return (
+    <div className="book">
+      <div className="book-top">
+        <div className="book-cover"
+          style={{
+            width: width ? width : 128,
+            height: height ? height : 193,
+            backgroundImage: `url("${imageLinks.thumbnail}")`
+          }}>
+        </div>
+        <StatusSelect statuses={statuses} />
+      </div>
+      <div className="book-title">{title}</div>
+      <div className="book-authors">{authors.join(', ')}</div>
+    </div>
+  );
+};
+
+const BookShelf = ({ title, books, statuses }) => (
   <div className="bookshelf">
     <h2 className="bookshelf-title">{title}</h2>
     <div className="bookshelf-books">
       <ol className="books-grid">
-        {books.map((b, i) => <li key={i}>{Book(b)}</li>)}
+        {books.map((book, i) =>
+          <li key={i}><Book book={book} statuses={statuses} /></li>)}
       </ol>
     </div>
   </div>
 );
 
 class BooksApp extends React.Component {
-  state = {
-    searchPhrase: 'Redux',
-    books: {
-      currentlyReading: [],
-      wantToRead: [],
-      read: []
-    }
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      searchPhrase: 'Redux',
+      statuses: props.statuses,
+      books: []
+    };
   }
 
   searchForBooks() {
     BooksAPI.search(this.state.searchPhrase, 5)
-            .then(books =>
-              this.setState(prevState => ({
-                ...prevState,
-                books: {...prevState.books, wantToRead: books}
-              })));
+      .then(books =>
+        books.map(book => ({
+          ...book,
+          status: this.state.statuses.WANT_TO_READ
+        })))
+      .then(books =>
+        this.setState(prevState => ({
+          ...prevState,
+          books: prevState.books.concat(books)
+        })));
+  }
+
+  getBooksInStatus(status) {
+    return this.state.books.filter(b => b.status === status);
   }
 
   componentDidMount() {
@@ -79,6 +98,7 @@ class BooksApp extends React.Component {
   }
 
   render() {
+    const { statuses } = this.state;
     return (
       <BrowserRouter>
         <div className="app">
@@ -90,9 +110,12 @@ class BooksApp extends React.Component {
               </div>
               <div className="list-books-content">
                 <div>
-                  <BookShelf title='Currently Reading' books={this.state.books.currentlyReading} />
-                  <BookShelf title='Want to Read' books={this.state.books.wantToRead} />
-                  <BookShelf title='Read' books={this.state.books.read} />
+                  {Object.keys(statuses).map(k =>
+                    <BookShelf
+                      key={k}
+                      title={statuses[k].display}
+                      books={this.getBooksInStatus(statuses[k])}
+                      statuses={statuses} />)}
                 </div>
               </div>
               <div className="open-search">
