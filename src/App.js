@@ -2,8 +2,7 @@ import React from 'react';
 import * as BooksAPI from './BooksAPI';
 import './App.css';
 import { BrowserRouter, Route, Link } from 'react-router-dom';
-
-// TODO: Add proptypes too all of these components
+import PropTypes from 'prop-types';
 
 const SearchPage = ({ searchPhrase, onKeyUp }) => (
   <div className="search-books">
@@ -22,6 +21,10 @@ const SearchPage = ({ searchPhrase, onKeyUp }) => (
     </div>
   </div>
 );
+SearchPage.propTypes = {
+  searchPhrase: PropTypes.string.isRequired,
+  onKeyUp: PropTypes.func.isRequired
+};
 
 const StatusSelect = ({ statuses, value, onStatusChange }) => (
   <div className="book-shelf-changer">
@@ -37,6 +40,15 @@ const StatusSelect = ({ statuses, value, onStatusChange }) => (
     </select>
   </div>
 );
+StatusSelect.propTypes = {
+  statuses: PropTypes.objectOf(PropTypes.shape({
+    display: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+    default: PropTypes.bool
+  })).isRequired,
+  value: PropTypes.string.isRequired,
+  onStatusChange: PropTypes.func.isRequired
+};
 
 const Book = ({ book, statuses, onStatusChange }) => {
   const { imageLinks={thumbnail: ''}, title = '', authors = [], width, height } = book;
@@ -59,6 +71,15 @@ const Book = ({ book, statuses, onStatusChange }) => {
     </div>
   );
 };
+Book.propTypes = {
+  book: PropTypes.object.isRequired,
+  statuses: PropTypes.objectOf(PropTypes.shape({
+    display: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+    default: PropTypes.bool
+  })).isRequired,
+  onStatusChange: PropTypes.func.isRequired
+};
 
 const BookShelf = ({ title, books, statuses, onBookStatuschange }) => (
   <div className="bookshelf">
@@ -76,6 +97,16 @@ const BookShelf = ({ title, books, statuses, onBookStatuschange }) => (
     </div>
   </div>
 );
+BookShelf.propTypes = {
+  title: PropTypes.string.isRequired,
+  books: PropTypes.arrayOf(PropTypes.object).isRequired,
+  statuses: PropTypes.objectOf(PropTypes.shape({
+    display: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+    default: PropTypes.bool
+  })).isRequired,
+  onBookStatuschange: PropTypes.func.isRequired
+};
 
 class BooksApp extends React.Component {
   state = {
@@ -189,6 +220,13 @@ class BooksApp extends React.Component {
       </BrowserRouter>
     );
   }
+};
+BooksApp.propTypes = {
+  statuses: PropTypes.objectOf(PropTypes.shape({
+    display: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+    default: PropTypes.bool
+  })).isRequired
 };
 
 export default BooksApp;
