@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import BookShelf from './BookShelf';
 
-const ListPage = ({ statuses, books, onBookStatuschange }) => (
+const LibraryPage = ({ statuses, books, onBookStatuschange }) => (
   <div className="list-books">
     <div className="list-books-title">
       <h1>MyReads</h1>
@@ -15,7 +15,7 @@ const ListPage = ({ statuses, books, onBookStatuschange }) => (
           <BookShelf
             key={k}
             title={statuses[k].display}
-            books={books.filter(b => b.status === statuses[k] )}
+            books={books.filter(b => b.status.value === statuses[k].value )}
             statuses={statuses}
             onBookStatuschange={onBookStatuschange} />)}
       </div>
@@ -25,7 +25,7 @@ const ListPage = ({ statuses, books, onBookStatuschange }) => (
     </div>
   </div>
 );
-ListPage.propTypes = {
+LibraryPage.propTypes = {
   statuses: PropTypes.objectOf(PropTypes.shape({
     display: PropTypes.string.isRequired,
     value: PropTypes.string.isRequired,
@@ -35,4 +35,4 @@ ListPage.propTypes = {
   onBookStatuschange: PropTypes.func.isRequired
 };
 
-export default ListPage;
+export default LibraryPage;

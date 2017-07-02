@@ -31,7 +31,17 @@ class BooksApp extends React.Component {
   }
 
   componentWillMount() {
-    this.setState(prevState => ({ ...prevState, statuses: this.props.statuses }));
+    const storedState = this.retrieveState();
+
+    if (storedState) {
+      console.log('Continuing with stored state!');
+      this.setState(prevState => storedState);
+    } else {
+      console.log('Starting with new state!');
+      this.setState(prevState => (
+        { ...prevState, statuses: this.props.statuses }
+      ), this.storeState);
+    }
   }
 
   addNewBookFromSearchResults(bookId) {
@@ -45,7 +55,7 @@ class BooksApp extends React.Component {
           ...prevState,
           searchResults: prevState.searchResults.filter(b => b.id !== bookId),
           books: prevState.books.concat([{ ...book, status: newStatus }])
-        }));
+        }), this.storeState);
       }
     };
   }
@@ -75,7 +85,7 @@ class BooksApp extends React.Component {
           ));
       }
 
-      this.setState(prevState => ({ ...prevState, books }));
+      this.setState(prevState => ({ ...prevState, books }), this.storeState);
     };
   }
 
@@ -92,6 +102,12 @@ class BooksApp extends React.Component {
       .shift();
   }
 
+  retrieveState() {
+    const state = JSON.parse(localStorage.getItem('state'));
+    console.log('Retrieving state!', state);
+    return state;
+  }
+
   searchForBooks() {
     const { searchPhrase } = this.state;
     const filterSearchResultsForBooksAlreadyAdded = searchResults => 
@@ -105,23 +121,30 @@ class BooksApp extends React.Component {
       this.setState(prevState => ({
         ...prevState,
         searchResults
-      }))
+      }), this.storeState);
 
-    BooksAPI.search(searchPhrase)
+    return BooksAPI.search(searchPhrase)
       .then(filterSearchResultsForBooksAlreadyAdded)
       .then(addDefaultStatusToResults)
       .then(updateState);
   }
+
+  storeState() {
+    console.log('Storing state!', this.state);
+    localStorage.setItem('state', JSON.stringify(this.state));
+  }
+
 
   updateSearchPhrase(e) {
     e.persist();
     this.setState(prevState => ({
       ...prevState,
       searchPhrase: e.target.value
-    }), this.searchForBooks);
+    }), () => this.searchForBooks().then(this.storeState));
   }
 
   render() {
+    console.log('Rendering!');
     const { books, statuses, searchPhrase, searchResults } = this.state;
     return (
       <div className="app">
