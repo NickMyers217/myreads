@@ -1,11 +1,11 @@
 import React from 'react';
-import { Route, Link } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 import * as BooksAPI from './BooksAPI';
 import './App.css';
 import SearchPage from './SearchPage';
-import BookShelf from './BookShelf';
+import LibraryPage from './LibraryPage';
 
 class BooksApp extends React.Component {
   static propTypes = {
@@ -30,10 +30,8 @@ class BooksApp extends React.Component {
     this.updateSearchPhrase = this.updateSearchPhrase.bind(this);
   }
 
-  // Override
   componentWillMount() {
     this.setState(prevState => ({ ...prevState, statuses: this.props.statuses }));
-    // TODO: Use localstorage to retrieve state if it exists
   }
 
   addNewBookFromSearchResults(bookId) {
@@ -87,10 +85,6 @@ class BooksApp extends React.Component {
       .shift();
   }
 
-  getBooksInStatus(status) {
-    return this.state.books.filter(b => b.status === status);
-  }
-
   getStatusByValue(value) {
     return Object.keys(this.state.statuses)
       .map(k => this.state.statuses[k])
@@ -127,11 +121,16 @@ class BooksApp extends React.Component {
     }), this.searchForBooks);
   }
 
-  // Override
   render() {
-    const { statuses, searchPhrase, searchResults } = this.state;
+    const { books, statuses, searchPhrase, searchResults } = this.state;
     return (
       <div className="app">
+        <Route exact path='/' render={() =>
+          <LibraryPage
+            statuses={statuses}
+            books={books}
+            onBookStatuschange={this.changeBookStatus} />
+        } />
         <Route exact path='/search' render={() =>
           <SearchPage
             searchPhrase={searchPhrase}
@@ -139,27 +138,6 @@ class BooksApp extends React.Component {
             statuses={statuses}
             onKeyUp={this.updateSearchPhrase}
             onBookStatuschange={this.addNewBookFromSearchResults} />
-        } />
-        <Route exact path='/' render={() =>
-          <div className="list-books">
-            <div className="list-books-title">
-              <h1>MyReads</h1>
-            </div>
-            <div className="list-books-content">
-              <div>
-                {Object.keys(statuses).map(k =>
-                  <BookShelf
-                    key={k}
-                    title={statuses[k].display}
-                    books={this.getBooksInStatus(statuses[k])}
-                    statuses={statuses}
-                    onBookStatuschange={this.changeBookStatus} />)}
-              </div>
-            </div>
-            <div className="open-search">
-              <Link to='/search'>Add a book</Link>
-            </div>
-          </div>
         } />
       </div>
     );
