@@ -41,7 +41,11 @@ const Book = ({ book, statuses, onStatusChange }) => {
           value={book.status.value}
           onStatusChange={onStatusChange(book.id)} />
       </div>
-      <div className="book-title">{title}</div>
+      <div className="book-title">
+        {book.infoLink
+          ? <a href={book.infoLink} target="_">{title}</a>
+          : title}
+      </div>
       <div className="book-authors">{authors.join(', ')}</div>
     </div>
   );
