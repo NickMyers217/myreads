@@ -27,21 +27,14 @@ class BooksApp extends React.Component {
     this.addNewBookFromSearchResults = this.addNewBookFromSearchResults.bind(this);
     this.bookIsNotInLibrary = this.bookIsNotInLibrary.bind(this);
     this.changeBookStatus = this.changeBookStatus.bind(this);
+    this.defaultBookStatus = this.defaultBookStatus.bind(this);
     this.updateSearchPhrase = this.updateSearchPhrase.bind(this);
   }
 
   componentWillMount() {
-    const storedState = this.retrieveState();
-
-    if (storedState) {
-      console.log('Continuing with stored state!');
-      this.setState(prevState => storedState);
-    } else {
-      console.log('Starting with new state!');
-      this.setState(prevState => (
-        { ...prevState, statuses: this.props.statuses }
-      ), this.storeState);
-    }
+    this.setState(prevState => (
+      { ...prevState, statuses: this.props.statuses }
+    ), this.getBooksFromServer);
   }
 
   addNewBookFromSearchResults(bookId) {
@@ -49,13 +42,14 @@ class BooksApp extends React.Component {
       const { searchResults } = this.state;
       const book = this.getBookById(bookId, searchResults);
       const newStatus = this.getStatusByValue(newStatusValue);
+      const newBook = { ...book, status: newStatus };
 
       if (book && newStatusValue !== 'none' && this.bookIsNotInLibrary(bookId)) {
         this.setState(prevState => ({
           ...prevState,
           searchResults: prevState.searchResults.filter(b => b.id !== bookId),
-          books: prevState.books.concat([{ ...book, status: newStatus }])
-        }), this.storeState);
+          books: prevState.books.concat([newBook])
+        }), () => this.updateBookOnServer(newBook));
       }
     };
   }
@@ -85,14 +79,36 @@ class BooksApp extends React.Component {
           ));
       }
 
-      this.setState(prevState => ({ ...prevState, books }), this.storeState);
+      this.setState(prevState => ({
+        ...prevState,
+        books
+      }), () => this.updateBookOnServer(this.getBookById(bookId, this.state.books)));
     };
+  }
+
+  defaultBookStatus(book) {
+    if (book.hasOwnProperty('shelf')) {
+      const status = this.getStatusByValue(book.shelf);
+      if (status) {
+        return { ...book, status };
+      }
+    }
+    return { ...book, status: { display: 'none', value: 'none' }};
   }
 
   getBookById(bookId, list) {
     return list
       .filter(book => book.id === bookId)
       .shift();
+  }
+
+  getBooksFromServer() {
+    BooksAPI.getAll()
+      .then(books => books.map(this.defaultBookStatus))
+      .then(books => this.setState(prevState => ({
+        ...prevState,
+        books
+      })));
   }
 
   getStatusByValue(value) {
@@ -102,26 +118,17 @@ class BooksApp extends React.Component {
       .shift();
   }
 
-  retrieveState() {
-    const state = JSON.parse(localStorage.getItem('state'));
-    console.log('Retrieving state!', state);
-    return state;
-  }
-
   searchForBooks() {
     const { searchPhrase } = this.state;
     const filterSearchResultsForBooksAlreadyAdded = searchResults => 
       searchResults.filter(book => this.bookIsNotInLibrary(book.id));
     const addDefaultStatusToResults = searchResults =>
-      searchResults.map(book => ({
-        ...book,
-        status: { display: 'none', value: 'none' }
-      }));
+      searchResults.map(this.defaultBookStatus);
     const updateState = searchResults =>
       this.setState(prevState => ({
         ...prevState,
         searchResults
-      }), this.storeState);
+      }));
 
     return BooksAPI.search(searchPhrase)
       .then(filterSearchResultsForBooksAlreadyAdded)
@@ -129,22 +136,22 @@ class BooksApp extends React.Component {
       .then(updateState);
   }
 
-  storeState() {
-    console.log('Storing state!', this.state);
-    localStorage.setItem('state', JSON.stringify(this.state));
+  updateBookOnServer(book) {
+    const newShelf = book.status && book.status.value
+      ? book.status.value
+      : 'none';
+    BooksAPI.update(book, newShelf);
   }
-
 
   updateSearchPhrase(e) {
     e.persist();
     this.setState(prevState => ({
       ...prevState,
       searchPhrase: e.target.value
-    }), () => this.searchForBooks().then(this.storeState));
+    }), this.searchForBooks);
   }
 
   render() {
-    console.log('Rendering!');
     const { books, statuses, searchPhrase, searchResults } = this.state;
     return (
       <div className="app">
