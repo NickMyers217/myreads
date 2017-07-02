@@ -82,11 +82,16 @@ class BooksApp extends React.Component {
   }
 
   searchForBooks() {
+    const defaultStatus = Object.keys(this.state.statuses)
+      .map(k => this.state.statuses[k])
+      .filter(status => status.default)
+      .shift();
+
     BooksAPI.search(this.state.searchPhrase, 5)
       .then(books =>
         books.map(book => ({
           ...book,
-          status: this.state.statuses.WANT_TO_READ
+          status: defaultStatus
         })))
       .then(books =>
         this.setState(prevState => ({
