@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Route, Link } from 'react-router-dom';
+import { Route, Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 import * as BooksAPI from './BooksAPI';
@@ -8,11 +8,19 @@ import SearchPage from './SearchPage';
 import BookShelf from './BookShelf';
 
 class BooksApp extends React.Component {
+  static propTypes = {
+    statuses: PropTypes.objectOf(PropTypes.shape({
+      display: PropTypes.string.isRequired,
+      value: PropTypes.string.isRequired,
+      default: PropTypes.bool
+    })).isRequired
+  }
+
   state = {
     searchPhrase: '',
     searchResults: [],
     books: []
-  };
+  }
 
   constructor(props) {
     super(props);
@@ -123,48 +131,39 @@ class BooksApp extends React.Component {
   render() {
     const { statuses, searchPhrase, searchResults } = this.state;
     return (
-      <BrowserRouter>
-        <div className="app">
-          <Route exact path='/search' render={() =>
-            <SearchPage
-              searchPhrase={searchPhrase}
-              searchResults={searchResults}
-              statuses={statuses}
-              onKeyUp={this.updateSearchPhrase}
-              onBookStatuschange={this.addNewBookFromSearchResults} />
-          } />
-          <Route exact path='/' render={() =>
-            <div className="list-books">
-              <div className="list-books-title">
-                <h1>MyReads</h1>
-              </div>
-              <div className="list-books-content">
-                <div>
-                  {Object.keys(statuses).map(k =>
-                    <BookShelf
-                      key={k}
-                      title={statuses[k].display}
-                      books={this.getBooksInStatus(statuses[k])}
-                      statuses={statuses}
-                      onBookStatuschange={this.changeBookStatus} />)}
-                </div>
-              </div>
-              <div className="open-search">
-                <Link to='/search'>Add a book</Link>
+      <div className="app">
+        <Route exact path='/search' render={() =>
+          <SearchPage
+            searchPhrase={searchPhrase}
+            searchResults={searchResults}
+            statuses={statuses}
+            onKeyUp={this.updateSearchPhrase}
+            onBookStatuschange={this.addNewBookFromSearchResults} />
+        } />
+        <Route exact path='/' render={() =>
+          <div className="list-books">
+            <div className="list-books-title">
+              <h1>MyReads</h1>
+            </div>
+            <div className="list-books-content">
+              <div>
+                {Object.keys(statuses).map(k =>
+                  <BookShelf
+                    key={k}
+                    title={statuses[k].display}
+                    books={this.getBooksInStatus(statuses[k])}
+                    statuses={statuses}
+                    onBookStatuschange={this.changeBookStatus} />)}
               </div>
             </div>
-          } />
-        </div>
-      </BrowserRouter>
+            <div className="open-search">
+              <Link to='/search'>Add a book</Link>
+            </div>
+          </div>
+        } />
+      </div>
     );
   }
-};
-BooksApp.propTypes = {
-  statuses: PropTypes.objectOf(PropTypes.shape({
-    display: PropTypes.string.isRequired,
-    value: PropTypes.string.isRequired,
-    default: PropTypes.bool
-  })).isRequired
 };
 
 export default BooksApp;
