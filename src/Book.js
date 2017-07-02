@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import Ratings from './Ratings';
+
 const StatusSelect = ({ statuses, value, onStatusChange }) => (
   <div className="book-shelf-changer">
     <select 
@@ -41,6 +43,7 @@ const Book = ({ book, statuses, onStatusChange }) => {
           value={book.status.value}
           onStatusChange={onStatusChange(book.id)} />
       </div>
+      <Ratings starCount={book.averageRating} numberOfRatings={book.ratingsCount} />
       <div className="book-title">
         {book.infoLink
           ? <a href={book.infoLink} target="_">{title}</a>
