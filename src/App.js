@@ -31,9 +31,12 @@ class BooksApp extends React.Component {
   }
 
   componentWillMount() {
-    this.setState(prevState => (
-      { ...prevState, statuses: this.props.statuses }
-    ), this.getBooksFromServer);
+    const { statuses } = this.state;
+
+    this.setState(prevState => ({
+      ...prevState,
+      statuses
+    }), this.getBooksFromServer);
   }
 
   addNewBookFromSearchResults(bookId) {
@@ -69,7 +72,6 @@ class BooksApp extends React.Component {
       const newBook = this.defaultBookStatus({ ...book, shelf: newStatusValue });
       const books = this.state.books
         .map(book => book.id === bookId ? newBook : book);
-
       
       this.updateBookOnServer(newBook)
         .then(this.setState(prevState => ({ ...prevState, books })));
@@ -83,7 +85,7 @@ class BooksApp extends React.Component {
         return { ...book, status };
       }
     }
-    return { ...book, status: { display: 'none', value: 'none' }};
+    return { ...book, status: { display: 'none', value: 'none' } };
   }
 
   getBookById(bookId, list) {
