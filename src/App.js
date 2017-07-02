@@ -11,8 +11,7 @@ class BooksApp extends React.Component {
   static propTypes = {
     statuses: PropTypes.objectOf(PropTypes.shape({
       display: PropTypes.string.isRequired,
-      value: PropTypes.string.isRequired,
-      default: PropTypes.bool
+      value: PropTypes.string.isRequired
     })).isRequired
   }
 

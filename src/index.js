@@ -7,7 +7,7 @@ import './index.css';
 
 const statuses = {
   CURRENTLY_READING: { display: 'Currently Reading', value: 'currentlyReading' },
-  WANT_TO_READ: { display: 'Want to Read', value: 'wantToRead', default: true },
+  WANT_TO_READ: { display: 'Want to Read', value: 'wantToRead' },
   READ: { display: 'Read', value: 'read' }
 };
 
