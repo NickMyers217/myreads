@@ -155,13 +155,13 @@ class BooksApp extends React.Component {
     const { books, statuses, searchPhrase, searchResults } = this.state;
     return (
       <div className="app">
-        <Route exact path={`${process.env.PUBLIC_URL}/`} render={() =>
+        <Route exact path='/' render={() =>
           <LibraryPage
             statuses={statuses}
             books={books}
             onBookStatuschange={this.changeBookStatus} />
         } />
-        <Route exact path={`${process.env.PUBLIC_URL}/search`} render={() =>
+        <Route exact path='/search' render={() =>
           <SearchPage
             searchPhrase={searchPhrase}
             searchResults={searchResults}
