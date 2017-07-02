@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 
+// These statuses form the book shelves in the app
 const statuses = {
   CURRENTLY_READING: { display: 'Currently Reading', value: 'currentlyReading' },
   WANT_TO_READ: { display: 'Want to Read', value: 'wantToRead' },
